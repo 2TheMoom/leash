@@ -8,6 +8,8 @@ import { LEASH_VAULT_ABI, LEASH_FACTORY_ABI } from '../contracts/abi'
 import { factoryAddress } from '../contracts/addresses'
 import { useVaultState, useAgentConfig } from '../hooks/useVault'
 import { useSelectedVault } from '../hooks/useSelectedVault'
+import { useVaultHistory } from '../hooks/useVaultHistory'
+import { getPayeeLabels } from '../lib/payeeLabels'
 import { formatUsdc, tryParseUsdc, shortAddr, stringToBytes32, leftToday, currentWindowSpend } from '../lib/format'
 import { decodeLeashError } from '../lib/errors'
 import { Rail } from './Rail'
@@ -67,6 +69,11 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
     : dashboardVault
 
   const vaultState = useVaultState(effectiveVault, chainId)
+  // Allowlisted payees come from the vault's own PayeeSet events, so the owner never retypes them here.
+  const history = useVaultHistory({ vaultAddress: effectiveVault, factoryAddress: factory ?? '0x0000000000000000000000000000000000000000', chainId, enabled: !!effectiveVault })
+  const payeeLabels = effectiveVault ? getPayeeLabels(chainId, effectiveVault) : {}
+  const allowlisted = Array.from(history.allowedPayeeAddresses)
+  const payeeIsAllowlisted = isAddress(payee) && allowlisted.some((a) => a.toLowerCase() === payee.toLowerCase())
   const agentCfg = useAgentConfig(effectiveVault, burnerAddress, chainId)
 
   const publicClient = usePublicClient({ chainId })
@@ -300,6 +307,27 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
         <form onSubmit={(e) => { e.preventDefault(); void sendPayment() }} className="grid gap-[14px]">
           <div className="grid gap-[6px]">
             <label className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink2">Pay to</label>
+            {allowlisted.length > 0 && (
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Allowlisted payees">
+                {allowlisted.map((a) => {
+                  const on = payee.toLowerCase() === a.toLowerCase()
+                  const label = payeeLabels[a.toLowerCase()]
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setPayee(a)}
+                      aria-pressed={on}
+                      title={a}
+                      className={`inline-flex items-center gap-2 font-mono text-[12px] rounded-full border px-[10px] py-[4px] cursor-pointer transition-colors ${on ? 'bg-slack text-white border-slack' : 'bg-slack-wash text-slack border-slack/50 hover:bg-plate'}`}
+                    >
+                      {label && <b className="font-body font-semibold">{label}</b>}
+                      {shortAddr(a)}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
             <input
               value={payee}
               onChange={(e) => setPayee(e.target.value)}
@@ -307,6 +335,11 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
               className="border border-ink rounded px-[11px] py-[10px] font-body text-[14px] bg-plate"
               aria-label="Payee address"
             />
+            {isAddress(payee) && allowlisted.length > 0 && (
+              <p className={`m-0 font-mono text-[12px] ${payeeIsAllowlisted ? 'text-slack' : 'text-[#B8400F]'}`}>
+                {payeeIsAllowlisted ? 'On the allowlist. Pays instantly inside your limits.' : 'Not on the allowlist. It will be held for the owner.'}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-[6px]">
