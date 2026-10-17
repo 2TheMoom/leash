@@ -14,7 +14,7 @@ Built with [Arc Studio](https://studio.arc.io/app/b1487e97-5c74-40ed-a77e-d3fe19
 | Network | Chain id | LeashFactory |
 |---|---|---|
 | Arc testnet | 5042002 | `0x6b890344f30c87edb362900591770967a3a7f8c7` |
-| Arc mainnet | 5042 | see `src/contracts/addresses.ts` |
+| Arc mainnet | 5042 | `0x955EbC44f1704146432890536Fd5e0d71511Eb54` ([deploy tx](https://explorer.arc.io/tx/0x41621ec01faa5b5a22c6953471298cb758fa640a714e66fd39cfbbce650fa812)) |
 
 USDC on both networks is `0x3600000000000000000000000000000000000000` (ERC-20 interface, 6 decimals).
 
