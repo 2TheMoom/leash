@@ -9,6 +9,10 @@ A spending-policy vault for AI agents, on Arc. You hold USDC in your own vault. 
 
 Built with [Arc Studio](https://studio.arc.io/app/b1487e97-5c74-40ed-a77e-d3fe19690659). The contracts and frontend were generated there, then independently reviewed, tested and fixed against the real Arc RPC outside of Studio.
 
+## Live app
+
+https://leash-cyan.vercel.app
+
 ## Deployments
 
 | Network | Chain id | LeashFactory |
@@ -76,7 +80,7 @@ forge create --rpc-url https://rpc.mainnet.arc.io --account deployer --broadcast
   --constructor-args 0x3600000000000000000000000000000000000000
 ```
 
-Then put the address in `src/contracts/addresses.ts` and replace the `YOUR_DOMAIN` placeholders in `index.html`.
+Then put the address in `src/contracts/addresses.ts` and set your own domain in the meta tags in `index.html`.
 
 ## License
 

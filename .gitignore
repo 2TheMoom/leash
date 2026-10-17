@@ -15,3 +15,7 @@ verify*.html
 src/verify.tsx
 vitest.local.config.mjs
 bun-test-shim.mjs
+.vercel
+
+.vercel
+.env*
