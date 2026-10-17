@@ -115,16 +115,19 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
         aria-labelledby="wallet-tag-title"
       >
         <div className="tag-swing grid justify-items-center">
+          {/* nail in the top edge of the screen, the rope runs from it and is tied through the tag's hole */}
+          <span aria-hidden="true" className="relative z-[3] -mb-[7px] w-[14px] h-[14px] rounded-full border-[1.5px] border-ink bg-plate" />
           <div
             aria-hidden="true"
-            className="w-1 h-[52px] rounded-sm"
+            className="relative z-[2] w-1 h-[68px] -mb-4 rounded-sm"
             style={{ background: 'repeating-linear-gradient(180deg, #2A3BFF 0 6px, #1B28C9 6px 9px)' }}
           />
           <div
-            className="relative w-full bg-plate border-[1.5px] border-ink rounded-md px-4 pt-7 pb-4 grid gap-[13px]"
+            className="relative z-[1] w-full bg-plate border-[1.5px] border-ink rounded-md px-4 pt-7 pb-4 grid gap-[13px]"
             style={{ boxShadow: '6px 6px 0 var(--ink)' }}
           >
-            <span aria-hidden="true" className="absolute top-[9px] left-1/2 -ml-[7px] w-[15px] h-[15px] rounded-full border-[1.5px] border-ink bg-paper" />
+            <span aria-hidden="true" className="absolute top-[9px] left-1/2 -ml-[7.5px] w-[15px] h-[15px] rounded-full border-[1.5px] border-ink bg-paper" />
+            <span aria-hidden="true" className="absolute z-[3] top-[13px] left-1/2 -ml-[3.5px] w-[7px] h-[7px] rounded-full bg-tension border border-ink" />
             <div className="flex items-center gap-[10px]">
               <span className="inline-flex items-center gap-[9px] font-display font-black tracking-[0.04em] text-[15px]" style={{ fontStretch: '118%' }}>
                 <LogoMark size={22} />
