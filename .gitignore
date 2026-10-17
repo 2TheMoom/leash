@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+contracts/out/
+contracts/cache/
+cache/
+out/
+.arc-studio/
+# local-only test harnesses
+src/shim.ts
+verify*.html
+src/verify.tsx
+vitest.local.config.mjs
+bun-test-shim.mjs

@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Font loading is handled by <link> tags in index.html to ensure they are
+   requested before any stylesheet (CSS @import after @tailwind is ignored
+   by browsers and causes a PostCSS warning). */
+
+:root {
+  /* Palette */
+  --paper: #EDF0F5;
+  --plate: #FFFFFF;
+  --ink: #0A0F1E;
+  --ink2: #3A4256;
+  --ink3: #69728A;
+  --steel: #C7CEDA;
+  --steel2: #E0E5EE;
+  --rope: #2A3BFF;
+  --rope-deep: #1B28C9;
+  --rope-wash: #E5E8FF;
+  --tension: #FF5A1F;
+  --tension-wash: #FFE8DD;
+  --slack: #0B8F63;
+  --slack-wash: #D9F3E8;
+  --stop: #D12B20;
+  --stop-wash: #FDE3E1;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* Hold-to-approve button fill */
+.hold-btn {
+  position: relative;
+  overflow: hidden;
+}
+.hold-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--slack);
+  transform-origin: left;
+  transform: scaleX(var(--hold-progress, 0));
+  z-index: 0;
+  transition: none;
+}
+.hold-btn > span {
+  position: relative;
+  z-index: 1;
+}
+.hold-btn.is-holding > span {
+  color: #fff;
+}
+
+/* Rope/tether SVG animation */
+@keyframes blink { 50% { opacity: 0.35; } }
+@keyframes pulse-ring { 0% { opacity: 0.9; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.8); } }
+@keyframes coin-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+/* Wavy underline for hero "leash" word */
+.wavy-leash {
+  text-decoration: underline wavy var(--rope);
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
+}
+
+/* Rail component */
+.leash-rail {
+  position: relative;
+  height: 30px;
+  background-color: var(--steel2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.leash-rail-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--rope);
+  transition: width 0.5s ease;
+}
+.leash-rail-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,0.22) 0 4px, transparent 4px 9px);
+}
+.leash-rail-stop {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  background: var(--ink);
+}
+.leash-rail-pt {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--tension);
+}
+
+/* Sonner toast overrides */
+[data-sonner-toaster] [data-type='success'] { background: var(--slack-wash) !important; color: #07603f !important; }
+[data-sonner-toaster] [data-type='error'] { background: var(--stop-wash) !important; color: #8e1d15 !important; }
