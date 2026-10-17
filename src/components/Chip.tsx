@@ -31,3 +31,25 @@ export function Chip({ variant, children, dot }: ChipProps) {
     </span>
   )
 }
+
+interface ChipLinkProps {
+  href: string
+  children: ReactNode
+  /** Opens in a new tab and shows the arrow (default true). */
+  external?: boolean
+  className?: string
+}
+
+/** A link drawn as a small chip: replaces underlined text links. */
+export function ChipLink({ href, children, external = true, className = '' }: ChipLinkProps) {
+  return (
+    <a
+      href={href}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className={`inline-flex items-center gap-[4px] font-mono text-[11px] font-medium tracking-[0.04em] px-[8px] py-[2px] rounded-full border border-rope-deep/40 bg-rope-wash text-rope-deep no-underline transition-colors hover:bg-rope hover:text-white hover:border-rope focus-visible:outline-2 focus-visible:outline-tension ${className}`}
+    >
+      {children}
+      {external && <span aria-hidden="true" className="text-[10px] leading-none">&#8599;</span>}
+    </a>
+  )
+}

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useConnect } from 'wagmi'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { isAddress } from 'viem'
 import { LogoMark } from './Logo'
-import { describeConnectError, pickWallets, type WalletOption } from '../lib/walletList'
+import { ChipLink } from './Chip'
+import { describeConnectError, pickWallets, safeIcon, type WalletOption } from '../lib/walletList'
 import { SUPPORTED_CHAIN_IDS } from '../contracts/addresses'
 
 const NETWORKS: { id: number; name: string; note: string }[] = [
@@ -33,6 +34,9 @@ const IDLE: Status = { kind: 'idle', message: 'Pick a wallet to connect.' }
  */
 export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagProps) {
   const { connectors, connectAsync } = useConnect()
+  const { address, connector: active, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+  const [copied, setCopied] = useState(false)
   const wallets = pickWallets(connectors)
   const [status, setStatus] = useState<Status>(IDLE)
   const [watchValue, setWatchValue] = useState('')
@@ -43,10 +47,11 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
   useEffect(() => {
     if (!open) return
     returnFocus.current = document.activeElement as HTMLElement | null
-    setStatus(IDLE)
+    setStatus(isConnected ? { kind: 'idle', message: 'Connected. Pick another wallet to switch.' } : IDLE)
     setWatchError('')
     panelRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus()
     return () => returnFocus.current?.focus?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const onKeyDown = useCallback(
@@ -74,6 +79,7 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
 
   async function pick(w: WalletOption<(typeof connectors)[number]>) {
     if (status.kind === 'wait') return
+    if (isConnected && active?.id === w.connector.id) return onClose()
     const net = chainId === 5042 ? 'Mainnet' : 'Testnet'
     setStatus({ kind: 'wait', walletId: w.connector.id, message: `Check ${w.name} and approve sharing your address on Arc ${net}.` })
     try {
@@ -135,8 +141,35 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
             </div>
 
             <h2 id="wallet-tag-title" className="font-display font-black text-[22px] leading-none m-0" style={{ fontStretch: '112%' }}>
-              Take the handle
+              {isConnected ? 'Your handle' : 'Take the handle'}
             </h2>
+
+            {isConnected && address && (
+              <div className="grid gap-2 border-[1.5px] border-ink rounded p-3 bg-slack-wash">
+                <div className="flex items-center gap-2">
+                  {safeIcon(active?.icon) && <img src={safeIcon(active?.icon)} alt="" width={28} height={28} className="rounded" />}
+                  <b className="text-[14px]">{active?.name ?? 'Wallet'}</b>
+                  <span className="ml-auto font-mono text-[10px] tracking-[0.08em] uppercase text-slack">Connected</span>
+                </div>
+                <div className="font-mono text-[12px] break-all" title={address}>{address}</div>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(address).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1200) }).catch(() => {}) }}
+                    className="font-mono text-[12px] border-[1.5px] border-ink rounded px-[10px] py-[6px] bg-plate hover:bg-steel2 cursor-pointer"
+                  >
+                    {copied ? 'Copied' : 'Copy address'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { disconnect(); onClose() }}
+                    className="font-mono text-[12px] border-[1.5px] border-stop rounded px-[10px] py-[6px] bg-plate text-stop hover:bg-stop-wash cursor-pointer"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 border-[1.5px] border-ink rounded overflow-hidden bg-plate" role="group" aria-label="Network">
               {NETWORKS.filter((n) => (SUPPORTED_CHAIN_IDS as readonly number[]).includes(n.id)).map((n, i) => {
@@ -163,11 +196,12 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
               <div className="grid grid-cols-2 gap-2">
                 {wallets.map((w) => {
                   const mine = status.walletId === w.connector.id
+                  const isActive = isConnected && active?.id === w.connector.id
                   const state = mine ? status.kind : 'idle'
                   const tone =
                     state === 'wait' ? 'bg-tension-wash border-tension' : state === 'error' || state === 'rejected' ? 'bg-stop-wash border-stop' : 'bg-plate border-ink'
                   const chipTone = state === 'wait' ? 'text-tension' : state === 'idle' ? 'text-slack bg-slack-wash' : 'text-stop'
-                  const label = state === 'wait' ? 'Waiting' : state === 'rejected' ? 'Rejected' : state === 'error' ? 'Failed' : 'Detected'
+                  const label = state === 'wait' ? 'Waiting' : state === 'rejected' ? 'Rejected' : state === 'error' ? 'Failed' : isActive ? 'Connected' : isConnected ? 'Switch' : 'Detected'
                   return (
                     <button
                       key={w.connector.uid}
@@ -193,9 +227,9 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
                 <p className="m-0 text-[13px] text-ink2">Install one in this browser, then reload this page.</p>
                 <div className="flex flex-wrap gap-3">
                   {INSTALL_LINKS.map((l) => (
-                    <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] text-rope underline">
+                    <ChipLink key={l.href} href={l.href}>
                       {l.name}
-                    </a>
+                    </ChipLink>
                   ))}
                 </div>
               </div>
@@ -205,7 +239,7 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
               {status.message}
             </div>
 
-            <div className="grid grid-cols-2 gap-[10px]">
+            {!isConnected && <div className="grid grid-cols-2 gap-[10px]">
               <div className="border border-dashed border-steel rounded px-[10px] py-[9px] text-[12.5px] text-ink2 leading-snug">
                 <b className="block font-mono text-[10.5px] tracking-[0.1em] uppercase text-slack mb-[3px]">Leash reads</b>
                 Your address and the network. Nothing else.
@@ -214,13 +248,13 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
                 <b className="block font-mono text-[10.5px] tracking-[0.1em] uppercase text-stop mb-[3px]">Leash cannot</b>
                 Move funds or see your keys. Every action asks your wallet.
               </div>
-            </div>
+            </div>}
 
             <p className="m-0 text-[12.5px] text-ink2">
               <b className="text-ink">Owner wallet tip.</b> The owner key is the only key that can withdraw. Use a hardware wallet or a Safe.
             </p>
 
-            <form onSubmit={watch} className="grid gap-2" noValidate>
+            {!isConnected && <form onSubmit={watch} className="grid gap-2" noValidate>
               <label htmlFor="wallet-tag-watch" className="text-[12.5px] text-ink2">
                 Just looking? Paste a vault to watch it read-only, no wallet.
               </label>
@@ -246,7 +280,7 @@ export function WalletTag({ open, onClose, chainId, onChainChange }: WalletTagPr
                 </button>
               </div>
               {watchError && <span className="font-mono text-[12px] text-stop">{watchError}</span>}
-            </form>
+            </form>}
           </div>
         </div>
       </div>

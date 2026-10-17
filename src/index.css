@@ -142,3 +142,32 @@ body {
 }
 @keyframes tag-fade { from { opacity: 0; } to { opacity: 1; } }
 .tag-scrim { animation: tag-fade 0.2s ease-out 1; }
+
+/* Light touches that echo the wallet tag */
+.rope-tick {
+  padding-left: 26px;
+  background-image: repeating-linear-gradient(90deg, #2A3BFF 0 5px, #1B28C9 5px 7px);
+  background-repeat: no-repeat;
+  background-size: 18px 4px;
+  background-position: left center;
+}
+.tile {
+  position: relative;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.tile::after,
+.held-card::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+}
+.held-card {
+  position: relative;
+  box-shadow: 3px 3px 0 var(--tension);
+}

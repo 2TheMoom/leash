@@ -247,7 +247,7 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
                   {otherVault && (
                     <button
                       onClick={() => { setVaultAddr(''); switchVault(otherVault) }}
-                      className="text-left underline text-[12px] text-[#ff9a72] hover:text-white w-fit"
+                      className="text-left text-[12px] text-[#ff9a72] border border-[#ff9a72]/50 rounded-full px-[10px] py-[3px] hover:bg-[#3a1818] hover:text-white w-fit"
                     >
                       Switch to {shortAddr(otherVault)} where it may be active
                     </button>
@@ -273,7 +273,7 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
         ) : (
           <button
             onClick={clearBurner}
-            className="font-mono text-[11px] text-[#8e97b0] hover:text-white underline w-fit"
+            className="font-mono text-[11px] text-[#8e97b0] border border-[#3a4360] rounded-full px-[10px] py-[3px] hover:bg-[#1b2238] hover:text-white w-fit"
           >
             Clear demo key
           </button>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { WalletTag } from './WalletTag'
 import { safeIcon } from '../lib/walletList'
 import { shortAddr } from '../lib/format'
@@ -14,26 +14,24 @@ interface ConnectButtonProps {
 /** Top-bar wallet control: opens the tag when disconnected, shows the account when connected. */
 export function ConnectButton({ chainId, onChainChange }: ConnectButtonProps) {
   const { address, connector, isConnected } = useAccount()
-  const { disconnect } = useDisconnect()
   const [open, setOpen] = useState(false)
   const icon = safeIcon(connector?.icon)
 
   return (
     <>
       {isConnected && address ? (
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-2 border-[1.5px] border-ink rounded bg-plate px-[10px] py-[6px] font-mono text-[12px]" title={address}>
-            {icon && <img src={icon} alt="" width={18} height={18} className="rounded-sm" />}
-            {shortAddr(address)}
-          </span>
-          <button
-            type="button"
-            onClick={() => disconnect()}
-            className="font-mono text-[12px] border-[1.5px] border-steel rounded px-[10px] py-[6px] text-ink2 hover:bg-steel2 cursor-pointer"
-          >
-            Disconnect
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          title={address}
+          className="inline-flex items-center gap-2 border-[1.5px] border-ink rounded bg-plate px-[10px] py-[7px] font-mono text-[12px] cursor-pointer transition-[transform,box-shadow] hover:-translate-x-px hover:-translate-y-px"
+          style={{ boxShadow: '3px 3px 0 var(--ink)' }}
+        >
+          {icon && <img src={icon} alt="" width={18} height={18} className="rounded-sm" />}
+          {shortAddr(address)}
+          <span aria-hidden="true" className="text-ink3">&#9662;</span>
+        </button>
       ) : (
         <button
           type="button"

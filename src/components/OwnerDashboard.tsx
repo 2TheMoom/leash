@@ -12,7 +12,7 @@ import { setPayeeLabel, removePayeeLabel, getLabel } from '../lib/payeeLabels'
 import { verifyPaymentBeforeApproval } from '../lib/verifyPayment'
 import { formatUsdc, tryParseUsdc, shortAddr, relativeTime, currentWindowSpend, lookalikeOf } from '../lib/format'
 import { decodeLeashError } from '../lib/errors'
-import { Chip } from './Chip'
+import { Chip, ChipLink } from './Chip'
 import { Rail } from './Rail'
 import { HoldButton } from './HoldButton'
 
@@ -432,7 +432,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
             <button onClick={copyAddr} className="border border-steel bg-plate rounded-[3px] px-[7px] py-[3px] text-[11px] font-mono cursor-pointer hover:bg-steel2 flex-none">
               {copied ? 'Copied' : 'Copy'}
             </button>
-            <a href={`${explorerBase}/address/${vault}`} target="_blank" rel="noopener noreferrer" className="text-rope underline text-[11px] flex-none">Explorer</a>
+            <ChipLink href={`${explorerBase}/address/${vault}`} className="flex-none">Explorer</ChipLink>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -480,7 +480,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
           { label: 'Vault balance', value: formatUsdc(vaultState.usdcBalance) },
           { label: 'Paid, last 24h', value: formatUsdc(history.paidLast24h) },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-plate border border-ink rounded px-[14px] py-3">
+          <div key={label} className={`tile bg-plate border rounded px-[14px] py-3 ${label === 'Held for you' && vaultState.reserved > 0n ? 'border-tension' : 'border-ink'}`}>
             <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink3 block">{label}</span>
             <b className="font-mono text-[clamp(18px,3vw,26px)] leading-[1.1] tabular-nums block mt-1">
               {value}<small className="text-[12px] text-ink3 ml-1">USDC</small>
@@ -508,10 +508,10 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
       {/* Main columns */}
       <div className="grid md:grid-cols-[1.25fr_1fr] gap-4 min-w-0">
         {/* Left column */}
-        <div className="grid gap-4 min-w-0">
+        <div className="grid gap-4 min-w-0 content-start">
           {/* Agents */}
           <div className="min-w-0">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 flex justify-between items-center gap-2 mb-3">
+            <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 flex justify-between items-center gap-2 mb-3">
               <span>Agents</span>
               <span className="text-ink3">{agentList.length}</span>
             </div>
@@ -537,7 +537,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
 
           {/* Held payments */}
           <div className="min-w-0">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 flex justify-between items-center gap-2 mb-3">
+            <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 flex justify-between items-center gap-2 mb-3">
               <span>Held for you</span>
               {pendingPayments.length > 0 && <Chip variant="hold">{pendingPayments.length}</Chip>}
             </div>
@@ -550,7 +550,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
               {pendingPayments.map((p) => {
                 const payeeLabel = labelFor(p.payee)
                 return (
-                  <div key={String(p.id)} className="border border-tension bg-plate rounded p-3 grid gap-[10px] min-w-0">
+                  <div key={String(p.id)} className="held-card tag-swing border border-tension bg-plate rounded p-3 grid gap-[10px] min-w-0">
                     <div className="flex flex-wrap justify-between gap-2 items-baseline">
                       <b className="font-mono text-[22px] leading-tight tabular-nums">
                         {formatUsdc(p.amount)}<small className="text-[12px] text-ink3 ml-1">USDC</small>
@@ -592,10 +592,10 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
         </div>
 
         {/* Right column */}
-        <div className="grid gap-4 min-w-0">
+        <div className="grid gap-4 min-w-0 content-start">
           {/* Allowed payees */}
           <div className="min-w-0">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Allowed payees</div>
+            <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Allowed payees</div>
             <div className="bg-plate border border-steel rounded p-[14px] grid gap-[10px] min-w-0">
               {allowedPayeeList.length === 0 && <p className="text-[14px] text-ink3">No payees yet.</p>}
               {allowedPayeeList.length > 0 && (
@@ -611,7 +611,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
                           <CopyBtn text={p} />
                         </span>
                         {!readOnly && (
-                          <button onClick={() => removePayee(p)} disabled={writesBlocked} className="font-mono text-[11px] text-stop hover:underline disabled:opacity-40 flex-none">Remove</button>
+                          <button onClick={() => removePayee(p)} disabled={writesBlocked} className="font-mono text-[11px] text-stop border border-stop/40 rounded-full px-[8px] py-[2px] hover:bg-stop-wash disabled:opacity-40 flex-none">Remove</button>
                         )}
                       </li>
                     )
@@ -630,7 +630,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
 
           {/* Activity */}
           <div className="min-w-0">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Activity</div>
+            <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Activity</div>
             <div className="bg-plate border border-steel rounded p-[14px] min-w-0">
               {history.activity.length === 0 && <p className="text-[14px] text-ink3">No recent activity.</p>}
               <ul className="grid min-w-0">
@@ -649,7 +649,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
                       <span className="font-mono text-[11px] text-ink3 block">
                         {e.timestamp > 0 ? relativeTime(e.timestamp) : `block ${String(e.blockNumber)}`}
                         {e.txHash && (
-                          <a href={`${explorerBase}/tx/${e.txHash}`} target="_blank" rel="noopener noreferrer" className="ml-2 text-rope underline">tx</a>
+                          <ChipLink href={`${explorerBase}/tx/${e.txHash}`} className="ml-2">tx</ChipLink>
                         )}
                       </span>
                     </div>
@@ -662,7 +662,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
           {/* Deposit */}
           {!readOnly && (
             <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Deposit USDC</div>
+              <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Deposit USDC</div>
               <div className="bg-plate border border-steel rounded p-[14px]">
                 <p className="text-[13px] text-ink2 mb-3">Send USDC to the vault by transferring directly to its address, or use the form below.</p>
                 <form onSubmit={doDeposit} className="flex gap-2">
@@ -676,7 +676,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
           {/* Withdraw */}
           {!readOnly && (
             <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Withdraw</div>
+              <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Withdraw</div>
               <div className="bg-plate border border-steel rounded p-[14px]">
                 <p className="text-[13px] text-ink2 mb-3">Available: <b className="font-mono">{formatUsdc(vaultState.available)} USDC</b></p>
                 <form onSubmit={doWithdraw} className="grid gap-2">
