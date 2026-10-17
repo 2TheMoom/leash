@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
-import { erc20Abi, isAddress } from 'viem'
+import { erc20Abi, getAddress, isAddress } from 'viem'
 import { toast } from 'sonner'
 import { LEASH_FACTORY_ABI, LEASH_VAULT_ABI } from '../contracts/abi'
 import { factoryAddress, USDC_ADDRESS } from '../contracts/addresses'
@@ -9,7 +9,7 @@ import { useVaultHistory, storeCreationBlock } from '../hooks/useVaultHistory'
 import { useSelectedVault } from '../hooks/useSelectedVault'
 import { useHeldPayments } from '../hooks/useHeldPayments'
 import { setPayeeLabel, removePayeeLabel, getLabel } from '../lib/payeeLabels'
-import { formatUsdc, parseUsdc, shortAddr, relativeTime, currentWindowSpend } from '../lib/format'
+import { formatUsdc, tryParseUsdc, shortAddr, relativeTime, currentWindowSpend, lookalikeOf } from '../lib/format'
 import { decodeLeashError } from '../lib/errors'
 import { Chip } from './Chip'
 import { Rail } from './Rail'
@@ -77,13 +77,13 @@ function CreateVaultPanel({ chainId, onCreated }: {
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash })
 
-  const delaySeconds = useAutoRelease ? Math.max(0, parseInt(delay || '0', 10)) : 0
+  const delaySeconds = useAutoRelease ? Math.min(4294967295, Math.max(0, parseInt(delay || '0', 10) || 0)) : 0
   const warnDelay = useAutoRelease && delaySeconds > 0 && delaySeconds < 300
 
   useEffect(() => {
     if (!isSuccess || !receipt) return
     for (const log of receipt.logs) {
-      if (log.topics.length >= 3) {
+      if (log.address.toLowerCase() === factory.toLowerCase() && log.topics.length >= 3) {
         const vaultTopic = log.topics[2]
         if (vaultTopic) {
           const vaultAddr = ('0x' + vaultTopic.slice(26)) as `0x${string}`
@@ -96,7 +96,7 @@ function CreateVaultPanel({ chainId, onCreated }: {
       }
     }
     onCreated('0x0000000000000000000000000000000000000000', receipt.blockNumber)
-  }, [isSuccess, receipt, chainId, onCreated])
+  }, [isSuccess, receipt, chainId, onCreated, factory])
 
   const create = useCallback(() => {
     if (!factory || !address) return
@@ -157,7 +157,10 @@ function AgentRow({ vaultAddress, agentAddress, chainId, walletChainId, frozen, 
   const spentNow = currentWindowSpend(cfg.spentInWindow, cfg.windowStart)
 
   function save() {
-    writeContract({ address: vaultAddress, abi: LEASH_VAULT_ABI, functionName: 'setAgent', args: [addr, cfg.active, parseUsdc(perCap), parseUsdc(dayCap)], chainId }, {
+    const per = tryParseUsdc(perCap)
+    const day = tryParseUsdc(dayCap)
+    if (per === null || day === null) return toast.error('Enter caps as plain numbers, like 2.50.')
+    writeContract({ address: vaultAddress, abi: LEASH_VAULT_ABI, functionName: 'setAgent', args: [addr, cfg.active, per, day], chainId }, {
       onSuccess: () => { setEditing(false); onSuccess() },
       onError: (e) => toast.error(decodeLeashError(e)),
     })
@@ -293,7 +296,10 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
   function addAgent(e: React.FormEvent) {
     e.preventDefault()
     if (!vault || !isAddress(newAgentAddr)) return toast.error('Enter a valid address.')
-    writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'setAgent', args: [newAgentAddr, true, parseUsdc(newAgentPerCap), parseUsdc(newAgentDayCap)], chainId }, {
+    const per = tryParseUsdc(newAgentPerCap)
+    const day = tryParseUsdc(newAgentDayCap)
+    if (per === null || day === null) return toast.error('Enter caps as plain numbers, like 2.50.')
+    writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'setAgent', args: [newAgentAddr, true, per, day], chainId }, {
       onSuccess: () => { void vaultState.refetch(); toast.success('Agent added.'); setNewAgentAddr(''); setNewAgentPerCap(''); setNewAgentDayCap('') },
       onError: (e) => toast.error(decodeLeashError(e)),
     })
@@ -320,7 +326,8 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
   function doWithdraw(e: React.FormEvent) {
     e.preventDefault()
     if (!vault || !isAddress(withdrawTo)) return toast.error('Enter a valid address.')
-    const raw = parseUsdc(withdrawAmt)
+    const raw = tryParseUsdc(withdrawAmt)
+    if (raw === null) return toast.error('Enter the amount as a plain number, like 2.50.')
     if (raw === 0n) return toast.error('Enter an amount greater than zero.')
     if (raw > vaultState.available) return toast.error(`Only ${formatUsdc(vaultState.available)} USDC available.`)
     writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'withdraw', args: [withdrawTo, raw], chainId }, {
@@ -348,7 +355,8 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
   function doDeposit(e: React.FormEvent) {
     e.preventDefault()
     const input = (e.currentTarget as HTMLFormElement).querySelector('input') as HTMLInputElement
-    const raw = parseUsdc(input.value)
+    const raw = tryParseUsdc(input.value)
+    if (raw === null) return toast.error('Enter the amount as a plain number, like 2.50.')
     if (!vault || raw === 0n) return
     writeContract({ address: USDC_ADDRESS, abi: erc20Abi, functionName: 'transfer', args: [vault, raw], chainId }, {
       onSuccess: () => { void vaultState.refetch(); toast.success('Deposit sent.'); input.value = '' },
@@ -371,7 +379,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
       <div className="flex flex-col items-center gap-4 py-16">
         <div className="border border-steel2 rounded p-5 text-center max-w-sm">
           <p className="font-mono text-[13px] text-ink3 uppercase tracking-[0.1em]">Not deployed on this network</p>
-          <p className="text-[14px] text-ink2 mt-2">Leash is deployed on Arc Testnet and not yet on this chain.</p>
+          <p className="text-[14px] text-ink2 mt-2">Leash is deployed on Arc Mainnet and Arc Testnet. Switch your wallet to one of them.</p>
         </div>
       </div>
     )
@@ -546,10 +554,16 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
                     </div>
                     <p className="font-mono text-[12px] leading-[1.8] text-ink2 min-w-0">
                       To{' '}
-                      <span title={p.payee} className="inline-flex items-center gap-1 flex-wrap">
-                        <span>{payeeLabel ? <><b>{payeeLabel}</b> <span className="text-ink3">{shortAddr(p.payee)}</span></> : shortAddr(p.payee)}</span>
+                      <span className="inline-flex items-start gap-1 flex-wrap min-w-0">
+                        {payeeLabel && <b>{payeeLabel}</b>}
+                        <span title={p.payee} className="break-all text-ink">{isAddress(p.payee) ? getAddress(p.payee) : p.payee}</span>
                         <CopyBtn text={p.payee} />
                       </span>
+                      {lookalikeOf(p.payee, allowedPayeeList) && (
+                        <span className="block mt-1 border border-stop bg-stop-wash text-stop rounded px-2 py-1 text-[12px] leading-snug">
+                          Looks like your allowlisted address {shortAddr(lookalikeOf(p.payee, allowedPayeeList) as string)} but is a different address. Compare every character before approving.
+                        </span>
+                      )}
                       <br />
                       From{' '}
                       <span title={p.agent} className="inline-flex items-center gap-1">

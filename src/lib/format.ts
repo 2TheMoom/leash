@@ -6,13 +6,27 @@
 const USDC_DECIMALS = 6
 const USDC_UNIT = 10n ** BigInt(USDC_DECIMALS)
 
-/** Parse a human-readable USDC string into raw uint128 (bigint). */
-export function parseUsdc(value: string): bigint {
+const UINT128_MAX = (1n << 128n) - 1n
+
+/**
+ * Parse a human-readable USDC string into raw uint128 units.
+ * Returns null for anything that is not a plain non-negative decimal
+ * ("abc", "-1", "1e3", "1,5", "1.2.3") or that does not fit in a uint128.
+ * Digits beyond the 6th decimal are truncated.
+ */
+export function tryParseUsdc(value: string): bigint | null {
   const trimmed = value.trim()
-  if (!trimmed || trimmed === '.') return 0n
-  const [intPart = '0', fracPart = ''] = trimmed.split('.')
+  if (!/^\d*\.?\d*$/.test(trimmed)) return null
+  const [intPart = '', fracPart = ''] = trimmed.split('.')
   const frac = (fracPart + '000000').slice(0, USDC_DECIMALS)
-  const raw = BigInt(intPart) * USDC_UNIT + BigInt(frac)
+  const raw = BigInt(intPart || '0') * USDC_UNIT + BigInt(frac)
+  return raw > UINT128_MAX ? null : raw
+}
+
+/** Like tryParseUsdc but throws on invalid input. */
+export function parseUsdc(value: string): bigint {
+  const raw = tryParseUsdc(value)
+  if (raw === null) throw new Error('Invalid USDC amount')
   return raw
 }
 
@@ -30,18 +44,36 @@ export function shortAddr(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
 }
 
-/** Convert bytes32 hex to a UTF-8 string, stripping null bytes. */
+/**
+ * Convert bytes32 hex to a display string. The value is chosen by the agent, so
+ * control characters and bidi overrides are removed to stop it spoofing the UI.
+ */
 export function bytes32ToString(hex: string): string {
   try {
-    const bytes = hex.slice(2).match(/.{2}/g) ?? []
-    return bytes
-      .map((b) => String.fromCharCode(parseInt(b, 16)))
-      .join('')
-      .replace(/\0/g, '')
+    const pairs = hex.slice(2).match(/.{2}/g) ?? []
+    const bytes = Uint8Array.from(pairs.map((b) => parseInt(b, 16)))
+    return new TextDecoder('utf-8')
+      .decode(bytes)
+      .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '')
       .trim()
   } catch {
     return hex
   }
+}
+
+/**
+ * True when `addr` is NOT in `known` but shares its first 4 and last 4 hex
+ * characters with an address that is (the "address poisoning" pattern).
+ */
+export function lookalikeOf(addr: string, known: string[]): string | null {
+  const a = addr.toLowerCase()
+  if (a.length !== 42) return null
+  for (const k of known) {
+    const b = k.toLowerCase()
+    if (b === a || b.length !== 42) continue
+    if (a.slice(0, 6) === b.slice(0, 6) && a.slice(-4) === b.slice(-4)) return k
+  }
+  return null
 }
 
 /** Convert a UTF-8 string to a bytes32 hex value. */

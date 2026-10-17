@@ -6,6 +6,8 @@
 import { describe, expect, it } from 'bun:test'
 import {
   parseUsdc,
+  tryParseUsdc,
+  lookalikeOf,
   formatUsdc,
   shortAddr,
   bytes32ToString,
@@ -131,5 +133,50 @@ describe('leftToday', () => {
     const windowStart = now - 100n
     const left = leftToday(25_000000n, 25_000000n, windowStart)
     expect(left).toBe(0n)
+  })
+})
+
+describe('tryParseUsdc', () => {
+  it('accepts plain decimals', () => {
+    expect(tryParseUsdc('2.5')).toBe(2_500000n)
+    expect(tryParseUsdc(' 7 ')).toBe(7_000000n)
+    expect(tryParseUsdc('.5')).toBe(500000n)
+    expect(tryParseUsdc('')).toBe(0n)
+  })
+
+  it('rejects anything that is not a plain non-negative decimal', () => {
+    for (const bad of ['abc', '-1', '1e3', '1,5', '1.2.3', '0x10', '1 2', '+1']) {
+      expect(tryParseUsdc(bad)).toBeNull()
+    }
+  })
+
+  it('rejects amounts that do not fit a uint128', () => {
+    expect(tryParseUsdc('340282366920938463463374607431768211455')).toBeNull()
+    expect(tryParseUsdc('1000000')).toBe(1_000_000_000000n)
+  })
+
+  it('parseUsdc throws where tryParseUsdc returns null', () => {
+    expect(() => parseUsdc('abc')).toThrow()
+  })
+})
+
+describe('bytes32ToString sanitising', () => {
+  it('strips control and bidi characters chosen by the agent', () => {
+    const spoof = 'inv' + String.fromCharCode(0x202e) + '-1' + String.fromCharCode(7) + String.fromCharCode(10)
+    const hex = '0x' + Buffer.from(spoof, 'utf8').toString('hex').padEnd(64, '0')
+    const out = bytes32ToString(hex)
+    expect(out).toBe('inv-1')
+  })
+})
+
+describe('lookalikeOf', () => {
+  const real = '0xD81145868710b228C9efdA234b89BFad40A47eE5'
+  it('flags an address sharing the first 4 and last 4 hex chars', () => {
+    const fake = '0xD811' + '0'.repeat(32) + '7eE5'
+    expect(lookalikeOf(fake, [real])).toBe(real)
+  })
+  it('does not flag the same address or unrelated ones', () => {
+    expect(lookalikeOf(real.toLowerCase(), [real])).toBeNull()
+    expect(lookalikeOf('0x' + '1'.repeat(40), [real])).toBeNull()
   })
 })

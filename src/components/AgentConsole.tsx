@@ -8,7 +8,7 @@ import { LEASH_VAULT_ABI, LEASH_FACTORY_ABI } from '../contracts/abi'
 import { factoryAddress } from '../contracts/addresses'
 import { useVaultState, useAgentConfig } from '../hooks/useVault'
 import { useSelectedVault } from '../hooks/useSelectedVault'
-import { formatUsdc, parseUsdc, shortAddr, stringToBytes32, leftToday, currentWindowSpend } from '../lib/format'
+import { formatUsdc, tryParseUsdc, shortAddr, stringToBytes32, leftToday, currentWindowSpend } from '../lib/format'
 import { decodeLeashError } from '../lib/errors'
 import { Rail } from './Rail'
 
@@ -86,8 +86,8 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
   // Simulate + send
   const sendPayment = useCallback(async () => {
     if (!effectiveVault || !burnerAccount || !publicClient) return
-    const rawAmount = parseUsdc(amount)
-    if (rawAmount === 0n) { setResult({ kind: 'stop', heading: 'Check the amount', body: 'Enter an amount above zero.' }); return }
+    const rawAmount = tryParseUsdc(amount)
+    if (rawAmount === null || rawAmount === 0n) { setResult({ kind: 'stop', heading: 'Check the amount', body: 'Enter a plain number above zero, like 0.50.' }); return }
     if (!isAddress(payee)) { setResult({ kind: 'stop', heading: 'Check the payee', body: 'Enter a valid 0x address.' }); return }
 
     setIsSending(true)
