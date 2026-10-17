@@ -550,7 +550,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
               {pendingPayments.map((p) => {
                 const payeeLabel = labelFor(p.payee)
                 return (
-                  <div key={String(p.id)} className="held-card tag-swing border border-tension bg-plate rounded p-3 grid gap-[10px] min-w-0">
+                  <div key={String(p.id)} className="held-card border border-tension bg-plate rounded p-3 grid gap-[10px] min-w-0">
                     <div className="flex flex-wrap justify-between gap-2 items-baseline">
                       <b className="font-mono text-[22px] leading-tight tabular-nums">
                         {formatUsdc(p.amount)}<small className="text-[12px] text-ink3 ml-1">USDC</small>

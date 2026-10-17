@@ -71,6 +71,11 @@ export function HoldButton({
         if (e.repeat || (e.key !== ' ' && e.key !== 'Enter')) return
         e.preventDefault()
       }
+      // Keep receiving pointer events even if the button moves or the cursor drifts off it,
+      // so the hold only ends on release, cancel or blur, never on a stray "pointer left".
+      if ('pointerId' in e) {
+        try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId) } catch { /* synthetic or inactive pointer */ }
+      }
       activeRef.current = true
       t0Ref.current = 0
       btnRef.current?.classList.add('is-holding')
@@ -108,7 +113,6 @@ export function HoldButton({
       aria-label="Hold to approve"
       onPointerDown={start}
       onPointerUp={stop}
-      onPointerLeave={stop}
       onPointerCancel={stop}
       onKeyDown={start}
       onKeyUp={stop}
