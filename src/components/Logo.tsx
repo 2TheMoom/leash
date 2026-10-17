@@ -41,7 +41,7 @@ export function Logo({ size = 34, className, light }: LogoProps) {
       <LogoMark size={size} />
       <span
         style={{
-          fontFamily: "'Archivo', system-ui, sans-serif",
+          fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif",
           fontWeight: 900,
           fontStretch: '125%',
           fontSize: size * 0.65,

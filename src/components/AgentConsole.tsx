@@ -200,7 +200,7 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#8e97b0]">Agent</p>
           <h3
             className="font-display font-extrabold text-[26px] leading-tight mt-1"
-            style={{ fontStretch: '112%', fontFamily: "'Archivo', system-ui, sans-serif" }}
+            style={{ fontStretch: '112%', fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif" }}
           >
             {burnerAddress ? 'Demo agent' : 'No agent'}
           </h3>
@@ -354,7 +354,7 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
         >
           <b
             className="font-display text-[17px]"
-            style={{ fontStretch: '112%', fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 700 }}
+            style={{ fontStretch: '112%', fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 700 }}
           >
             {result.heading}
           </b>

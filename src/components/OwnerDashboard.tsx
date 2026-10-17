@@ -9,6 +9,7 @@ import { useVaultHistory, storeCreationBlock } from '../hooks/useVaultHistory'
 import { useSelectedVault } from '../hooks/useSelectedVault'
 import { useHeldPayments } from '../hooks/useHeldPayments'
 import { setPayeeLabel, removePayeeLabel, getLabel } from '../lib/payeeLabels'
+import { verifyPaymentBeforeApproval } from '../lib/verifyPayment'
 import { formatUsdc, tryParseUsdc, shortAddr, relativeTime, currentWindowSpend, lookalikeOf } from '../lib/format'
 import { decodeLeashError } from '../lib/errors'
 import { Chip } from './Chip'
@@ -336,9 +337,13 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
     })
   }
 
-  function approvePayment(id: bigint) {
+  async function approvePayment(p: { id: bigint; agent: string; payee: string; amount: bigint }) {
     if (!vault) return
-    writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'approve', args: [id], chainId }, {
+    const toastId = toast.loading('Checking this payment against independent RPC endpoints...')
+    const verdict = await verifyPaymentBeforeApproval(chainId, vault, p.id, { agent: p.agent, payee: p.payee, amount: p.amount })
+    toast.dismiss(toastId)
+    if (!verdict.ok) return void toast.error(verdict.message, { duration: 10_000 })
+    writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'approve', args: [p.id], chainId }, {
       onSuccess: () => { void vaultState.refetch(); toast.success('Payment approved.') },
       onError: (e) => toast.error(decodeLeashError(e)),
     })
@@ -575,7 +580,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
                     </p>
                     {!readOnly && (
                       <div className="flex flex-wrap gap-2">
-                        <HoldButton onHeld={() => approvePayment(p.id)} disabled={isWriting || writesBlocked}>Hold to approve</HoldButton>
+                        <HoldButton onHeld={() => void approvePayment(p)} disabled={isWriting || writesBlocked}>Hold to approve</HoldButton>
                         <button onClick={() => cancelPayment(p.id)} disabled={isWriting || writesBlocked} className="font-body font-semibold text-[13px] px-3 py-[9px] border border-ink rounded bg-plate hover:bg-steel2 disabled:opacity-40 transition-colors">Cancel payment</button>
                       </div>
                     )}

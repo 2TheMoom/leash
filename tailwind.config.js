@@ -25,8 +25,8 @@ export default {
         'stop-wash': '#FDE3E1',
       },
       fontFamily: {
-        display: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        body: ['Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Archivo Variable', 'Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        body: ['Instrument Sans Variable', 'Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       fontStretch: {

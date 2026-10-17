@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ConnectKitButton } from 'connectkit'
+import { ConnectButton, NetworkSwitch } from './ConnectButton'
+import { usePreferredChain } from '../lib/preferredChain'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { isAddress } from 'viem'
 import { Logo } from './Logo'
@@ -40,11 +41,13 @@ export function AppPage({ onHome }: AppPageProps) {
   const [watchParams] = useState(parseWatchParams)
   const isWatchMode = watchParams.vault !== null
 
+  const [preferredChain, setPreferredChain] = usePreferredChain()
   const supported = isSupported(chainId)
-  // For watch mode, use the chain from the URL; otherwise use wallet chain.
+  // Watch mode follows the URL. Otherwise follow the wallet when it is on a supported
+  // chain, and the owner's last network choice when it is not (or nothing is connected).
   const vaultChainId: number = isWatchMode
     ? (watchParams.chain ?? SUPPORTED_CHAIN_IDS[0])
-    : (supported ? chainId : SUPPORTED_CHAIN_IDS[0])
+    : (supported ? chainId : preferredChain)
 
   const chainConfig = CHAIN_CONFIGS[vaultChainId]
   const explorerBase = chainConfig?.explorerBase ?? 'https://explorer.testnet.arc.io'
@@ -56,8 +59,13 @@ export function AppPage({ onHome }: AppPageProps) {
     }
   }, [])
 
-  function switchToTestnet() {
-    switchChain({ chainId: SUPPORTED_CHAIN_IDS[0] })
+  function switchToVaultChain() {
+    switchChain({ chainId: vaultChainId })
+  }
+
+  function selectNetwork(id: number) {
+    setPreferredChain(id)
+    if (isConnected && chainId !== id) switchChain({ chainId: id })
   }
 
   return (
@@ -117,22 +125,32 @@ export function AppPage({ onHome }: AppPageProps) {
               <Chip variant="stop">Unsupported chain</Chip>
             ) : null}
           </div>
-          {!isWatchMode && <ConnectKitButton />}
+          {!isWatchMode && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <NetworkSwitch chainId={vaultChainId} onSelect={selectNetwork} />
+              <ConnectButton chainId={vaultChainId} onChainChange={selectNetwork} />
+            </div>
+          )}
         </div>
 
         {/* Unsupported chain banner */}
         {!isWatchMode && isConnected && !supported && (
           <div className="border border-[#B8400F] bg-tension-wash rounded p-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[14px] text-[#8a2f08]">
-              Leash is not deployed on this chain. Switch to Arc Testnet to continue.
+              Leash is not deployed on this chain. Switch your wallet to an Arc network to continue.
             </p>
-            <button
-              onClick={switchToTestnet}
-              disabled={isSwitching}
-              className="font-body font-semibold text-[13px] px-3 py-[9px] border border-[#B8400F] rounded bg-plate text-[#8a2f08] hover:bg-tension-wash disabled:opacity-40"
-            >
-              {isSwitching ? 'Switching...' : 'Switch to Arc Testnet'}
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              {[{ id: 5042, name: 'Arc Mainnet' }, { id: 5042002, name: 'Arc Testnet' }].map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => selectNetwork(n.id)}
+                  disabled={isSwitching}
+                  className="font-body font-semibold text-[13px] px-3 py-[9px] border border-[#B8400F] rounded bg-plate text-[#8a2f08] hover:bg-tension-wash disabled:opacity-40"
+                >
+                  {isSwitching ? 'Switching...' : `Switch to ${n.name}`}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -149,7 +167,7 @@ export function AppPage({ onHome }: AppPageProps) {
             chainId={vaultChainId}
             explorerBase={explorerBase}
             walletChainId={isWatchMode ? undefined : chainId}
-            onSwitchChain={switchToTestnet}
+            onSwitchChain={switchToVaultChain}
             watchVault={watchParams.vault ?? undefined}
             readOnly={isWatchMode}
           />

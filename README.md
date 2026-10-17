@@ -37,7 +37,9 @@ anyone : execute(id) once autoReleaseDelay has passed (only if the owner enabled
 
 ## Security model
 
-Invariants (covered by 83 Foundry tests, including fuzz tests and two invariant suites):
+Invariants (covered by 114 Foundry tests, including fuzz tests and stateful invariant suites). The full threat model is in [docs/SECURITY.md](docs/SECURITY.md).
+
+Invariants:
 
 1. `reserved` always equals the sum of Pending payment amounts.
 2. The vault's USDC balance is never below `reserved`.

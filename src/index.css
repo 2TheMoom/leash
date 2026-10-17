@@ -45,7 +45,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Instrument Sans Variable', 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -127,3 +127,18 @@ body {
 /* Sonner toast overrides */
 [data-sonner-toaster] [data-type='success'] { background: var(--slack-wash) !important; color: #07603f !important; }
 [data-sonner-toaster] [data-type='error'] { background: var(--stop-wash) !important; color: #8e1d15 !important; }
+
+/* Wallet tag: swings once when it opens */
+@keyframes tag-swing {
+  0%   { transform: rotate(-3.2deg); }
+  22%  { transform: rotate(2.4deg); }
+  44%  { transform: rotate(-1.5deg); }
+  66%  { transform: rotate(0.8deg); }
+  100% { transform: rotate(0); }
+}
+.tag-swing {
+  transform-origin: 50% 0;
+  animation: tag-swing 2.6s ease-out 1;
+}
+@keyframes tag-fade { from { opacity: 0; } to { opacity: 1; } }
+.tag-scrim { animation: tag-fade 0.2s ease-out 1; }

@@ -56,7 +56,7 @@ export function Landing({ onOpenApp }: LandingProps) {
             </span>
             <h1
               className="text-[clamp(2.3rem,5.6vw,4.4rem)] leading-[0.96] tracking-[-0.025em] text-balance"
-              style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 900, fontStretch: '118%' }}
+              style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 900, fontStretch: '118%' }}
             >
               Give your agent a wallet. Keep hold of the{' '}
               <u className="wavy-leash" style={{ textDecorationColor: 'var(--rope)' }}>leash</u>.
@@ -93,7 +93,7 @@ export function Landing({ onOpenApp }: LandingProps) {
         <div className="max-w-[1120px] mx-auto px-[clamp(16px,4vw,40px)] grid md:grid-cols-[0.8fr_1.2fr] gap-9 items-start">
           <h2
             className="text-[clamp(1.7rem,3.6vw,2.7rem)] leading-[1] tracking-[-0.02em] text-balance max-w-[16ch]"
-            style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
+            style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
           >
             Four things your agent can never do.
           </h2>
@@ -123,7 +123,7 @@ export function Landing({ onOpenApp }: LandingProps) {
         <div className="max-w-[1120px] mx-auto px-[clamp(16px,4vw,40px)] grid gap-7">
           <h2
             className="text-[clamp(1.7rem,3.6vw,2.7rem)] leading-[1] tracking-[-0.02em] text-balance"
-            style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
+            style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
           >
             How the leash works.
           </h2>
@@ -149,7 +149,7 @@ export function Landing({ onOpenApp }: LandingProps) {
                 <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink3">{step.n}</span>
                 <h3
                   className="text-[20px] leading-tight"
-                  style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
+                  style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
                 >
                   {step.title}
                 </h3>
@@ -166,7 +166,7 @@ export function Landing({ onOpenApp }: LandingProps) {
           <div className="grid gap-4">
             <h2
               className="text-[clamp(1.7rem,3.6vw,2.7rem)] leading-[1] tracking-[-0.02em] text-balance"
-              style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
+              style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 800, fontStretch: '112%' }}
             >
               Built to be checked.
             </h2>
@@ -213,7 +213,7 @@ export function Landing({ onOpenApp }: LandingProps) {
         <div className="max-w-[1120px] mx-auto px-[clamp(16px,4vw,40px)] flex flex-wrap gap-6 items-center justify-between">
           <h2
             className="text-[clamp(2.2rem,6vw,4.6rem)] leading-[0.95] tracking-[-0.02em]"
-            style={{ fontFamily: "'Archivo', system-ui, sans-serif", fontWeight: 900, fontStretch: '125%' }}
+            style={{ fontFamily: "'Archivo Variable', 'Archivo', system-ui, sans-serif", fontWeight: 900, fontStretch: '125%' }}
           >
             Hold the other end.
           </h2>

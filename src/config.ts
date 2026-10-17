@@ -4,7 +4,6 @@
  */
 
 import { http, createConfig } from 'wagmi'
-import { mainnet } from 'wagmi/chains'
 import { arcTestnet } from 'viem/chains'
 import { defineChain } from 'viem'
 import { injected } from 'wagmi/connectors'
@@ -19,11 +18,10 @@ export const arcMainnet = defineChain({
 })
 
 export const config = createConfig({
-  chains: [arcTestnet, arcMainnet, mainnet],
+  chains: [arcTestnet, arcMainnet],
   connectors: [injected()],
   transports: {
     [arcTestnet.id]: http('https://rpc.testnet.arc.io'),
     [arcMainnet.id]: http('https://rpc.mainnet.arc.io'),
-    [mainnet.id]: http(), // ENS resolution uses mainnet
   },
 })
