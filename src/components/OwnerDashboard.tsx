@@ -5,7 +5,8 @@ import { toast } from 'sonner'
 import { LEASH_FACTORY_ABI, LEASH_VAULT_ABI } from '../contracts/abi'
 import { factoryAddress, USDC_ADDRESS } from '../contracts/addresses'
 import { useVaultState, useAgentConfig } from '../hooks/useVault'
-import { useVaultHistory, storeCreationBlock } from '../hooks/useVaultHistory'
+import { useVaultHistory } from '../hooks/useVaultHistory'
+import { addKnown } from '../lib/knownAddresses'
 import { useSelectedVault } from '../hooks/useSelectedVault'
 import { useHeldPayments } from '../hooks/useHeldPayments'
 import { setPayeeLabel, removePayeeLabel, getLabel } from '../lib/payeeLabels'
@@ -89,7 +90,6 @@ function CreateVaultPanel({ chainId, onCreated }: {
         if (vaultTopic) {
           const vaultAddr = ('0x' + vaultTopic.slice(26)) as `0x${string}`
           if (isAddress(vaultAddr)) {
-            storeCreationBlock(chainId, vaultAddr, receipt.blockNumber)
             onCreated(vaultAddr, receipt.blockNumber)
             return
           }
@@ -264,7 +264,6 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
   })
   const history = useVaultHistory({
     vaultAddress: vault,
-    factoryAddress: factory,
     chainId,
     enabled: !!vault,
   })
@@ -301,7 +300,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
     const day = tryParseUsdc(newAgentDayCap)
     if (per === null || day === null) return toast.error('Enter caps as plain numbers, like 2.50.')
     writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'setAgent', args: [newAgentAddr, true, per, day], chainId }, {
-      onSuccess: () => { void vaultState.refetch(); toast.success('Agent added.'); setNewAgentAddr(''); setNewAgentPerCap(''); setNewAgentDayCap('') },
+      onSuccess: () => { addKnown(chainId, vault, 'agents', newAgentAddr); void vaultState.refetch(); void history.retry(); toast.success('Agent added.'); setNewAgentAddr(''); setNewAgentPerCap(''); setNewAgentDayCap('') },
       onError: (e) => toast.error(decodeLeashError(e)),
     })
   }
@@ -311,7 +310,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
     if (!vault || !isAddress(newPayeeAddr)) return toast.error('Enter a valid address.')
     if (newPayeeLabel.trim() && vault) setPayeeLabel(chainId, vault, newPayeeAddr, newPayeeLabel)
     writeContract({ address: vault, abi: LEASH_VAULT_ABI, functionName: 'setPayee', args: [newPayeeAddr, true], chainId }, {
-      onSuccess: () => { void vaultState.refetch(); refreshLabels(); toast.success(`Payee ${newPayeeLabel || shortAddr(newPayeeAddr)} added.`); setNewPayeeAddr(''); setNewPayeeLabelState('') },
+      onSuccess: () => { addKnown(chainId, vault, 'payees', newPayeeAddr); void vaultState.refetch(); void history.retry(); refreshLabels(); toast.success(`Payee ${newPayeeLabel || shortAddr(newPayeeAddr)} added.`); setNewPayeeAddr(''); setNewPayeeLabelState('') },
       onError: (e) => toast.error(decodeLeashError(e)),
     })
   }
@@ -394,8 +393,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
     return (
       <CreateVaultPanel
         chainId={chainId}
-        onCreated={(vaultAddr, blockNumber) => {
-          storeCreationBlock(chainId, vaultAddr, blockNumber)
+        onCreated={() => {
           void refetchVaults()
         }}
       />
@@ -632,7 +630,7 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
           <div className="min-w-0">
             <div className="rope-tick font-mono text-[11px] uppercase tracking-[0.12em] text-ink2 mb-3">Activity</div>
             <div className="bg-plate border border-steel rounded p-[14px] min-w-0">
-              {history.activity.length === 0 && <p className="text-[14px] text-ink3">No recent activity.</p>}
+              {history.activity.length === 0 && <p className="text-[14px] text-ink3">No payments yet.</p>}
               <ul className="grid min-w-0">
                 {history.activity.map((e, i) => (
                   <li key={i} className="grid grid-cols-[auto_1fr] gap-2 items-start py-[9px] border-b border-steel2 last:border-b-0 min-w-0">
@@ -656,6 +654,10 @@ export function OwnerDashboard({ chainId, explorerBase, walletChainId, onSwitchC
                   </li>
                 ))}
               </ul>
+              <p className="mt-3 mb-0 text-[12px] text-ink3">
+                Payments only. Deposits, withdrawals and every event are on the{' '}
+                <ChipLink href={`${explorerBase}/address/${vault}?tab=logs`}>explorer</ChipLink>.
+              </p>
             </div>
           </div>
 

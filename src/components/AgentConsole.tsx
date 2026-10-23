@@ -70,7 +70,7 @@ export function AgentConsole({ chainId, explorerBase: _explorerBase }: AgentCons
 
   const vaultState = useVaultState(effectiveVault, chainId)
   // Allowlisted payees come from the vault's own PayeeSet events, so the owner never retypes them here.
-  const history = useVaultHistory({ vaultAddress: effectiveVault, factoryAddress: factory ?? '0x0000000000000000000000000000000000000000', chainId, enabled: !!effectiveVault })
+  const history = useVaultHistory({ vaultAddress: effectiveVault, chainId, enabled: !!effectiveVault })
   const payeeLabels = effectiveVault ? getPayeeLabels(chainId, effectiveVault) : {}
   const allowlisted = Array.from(history.allowedPayeeAddresses)
   const payeeIsAllowlisted = isAddress(payee) && allowlisted.some((a) => a.toLowerCase() === payee.toLowerCase())
