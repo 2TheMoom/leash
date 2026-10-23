@@ -56,9 +56,16 @@ allowlisted makes the no-strangers invariant fail.
 4. **The owner key is a single point of failure.** Use a hardware wallet or a Safe.
    Ownership moves in two steps. To cancel a mistaken proposal, propose the current
    owner address (the proposal slot cannot be set to zero).
-5. **No on-chain enumeration of agents or payees.** The app rebuilds both lists from
-   event logs, so a dishonest RPC could hide an entry from the dashboard. Use
-   `getAgent` and `allowedPayees` to check a specific address.
+5. **No on-chain enumeration of agents or payees.** The contract cannot list them, and
+   Arc's public RPCs cannot serve old event logs (they rate-limit `eth_getLogs`, cap the
+   range and prune history). The dashboard therefore rebuilds its ledger from contract
+   state: every payment is stored by id, so one multicall recovers the activity, the
+   agents that have paid and the payees that were paid. Each candidate address is then
+   confirmed with `getAgent` and `allowedPayees` before it is shown. An agent or payee
+   that was configured but never used, by an owner on a different device, will not
+   appear for other viewers. Check a specific address with `getAgent` and
+   `allowedPayees`. The activity list shows payments only, dated by when they were
+   queued or paid, and links to the explorer for the full event history.
 6. **Deposits are plain ERC-20 transfers.** Tokens sent by mistake cannot be recovered.
 7. **Payee can be the token contract itself.** An owner who approves that loses the
    funds. The approval card shows the full address so this is visible.
